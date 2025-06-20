@@ -1,0 +1,5 @@
+/alertmanager_data 1000
+/grafana_data  472
+/prometheus_data  65534
+
+primission: 755

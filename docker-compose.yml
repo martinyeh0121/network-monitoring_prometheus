@@ -1,0 +1,117 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus_data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle
+    ports:
+      - 9090:9090
+  
+  
+  snmp-exporter:
+    image: prom/snmp-exporter:latest
+    container_name: snmp-exporter
+    restart: unless-stopped
+    volumes:
+      - ./config/snmp_exporter/generator/snmp.yml:/etc/snmp_exporter/snmp.yml
+    ports:
+      - 9116:9116
+    networks:
+      - default
+
+  # alertmanager:
+  #   image: prom/alertmanager:latest
+  #   container_name: alertmanager
+  #   restart: unless-stopped
+  #   # environment:
+  #   #   - TZ=Asia/Taipei
+  #   volumes:
+  #     - ./config/alertmanager/config.yml:/etc/alertmanager/config.yml:ro
+  #     - ./data/alertmanager_data:/alertmanager
+  #   command:
+  #     - '--config.file=/etc/alertmanager/config.yml'
+  #     - '--storage.path=/alertmanager'
+  #     - '--log.level=info'
+  #   networks:
+  #     - default
+  #   ports:
+  #     - 9093:9093
+    # healthcheck:
+    #   test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/ready"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3
+
+  node-exporter:  # 輸出本基資訊 未做存取控制
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    # ports: # host network 取代 處理 interface配置
+    #   - 9100:9100
+
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    environment:
+      - GF_PLUGINS_PREINSTALL=alexanderzobnin-zabbix-app
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=alexanderzobnin-zabbix-app
+      - GF_SERVER_ROOT_URL=http://192.168.16.19:3000/
+      
+    ports:
+      - 3000:3000
+    volumes:  #/data
+      - ./data/grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      # - zabbix-docker_frontend
+      - zabbix-docker_backend
+      - default
+
+networks:
+  default:
+    name: prometheus-grafana
+    driver: bridge
+  zabbix-docker_backend:
+  # zabbix-docker_frontend:
+    external: true  # 使用現有的網絡
+
+volumes:
+  # prometheus_data:
+  grafana_data:
+
+
+
+# ------------------------------------------------------------
+
+  # node-exporter:
+  #   image: prom/node-exporter:latest
+  #   container_name: node-exporter
+  #   restart: unless-stopped
+  #   # network_mode: "host"
+  #   volumes:
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/rootfs:ro
+  #   command:
+  #     # - --net=host
+  #     - --path.procfs=/host/proc
+  #     - --path.rootfs=/rootfs
+  #     - --path.sysfs=/host/sys
+  #     - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+  #   # ports:
+  #   #   - 9100:9100

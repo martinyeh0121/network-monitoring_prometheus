@@ -1,0 +1,37 @@
+# 資料目錄 請自行補上
+/data/*
+!/data/_.txt
+
+/README_full.md/
+
+# 排除 configs
+/config/prometheus/prometheus.yml
+
+/config/snmp_exporter/generator/generator.yml
+/config/snmp_exporter/generator/snmp.yml
+
+/config/alertmanager/config.yml
+
+
+# 無關部分
+/cutboard/
+
+# 其他常見忽略項目
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# 憑證與敏感資訊（如有）
+*.pem
+*.crt
+*.key
+
+# VSCode 設定
+.vscode/ 
+
+# gitignore
+*.gitignore
+!.gitignore
